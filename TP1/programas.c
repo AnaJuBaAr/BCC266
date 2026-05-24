@@ -9,10 +9,13 @@ void programa_aleatorio (Ram *ram, CPU *cpu, int qtdInstrucoes);
 int multiplicacao (Ram *ram, CPU *cpu, int multiplicador, int multiplicando);
 int divisao (Ram *ram, CPU *cpu, int dividendo, int divisor);
 void fibonacci (Ram *ram, CPU *cpu, int Nesimo);
-void exponenciacao (Ram *ram, CPU *cpu, int base, int exponte);
+int exponenciacao (Ram *ram, CPU *cpu, int base, int exponte);
 void fatorial(Ram *ram, CPU *cpu, int fatorial);
 void mdc(Ram *ram, CPU *cpu, int a, int b);
 void numero_primo(Ram *ram, CPU *cpu, int x);
+int raizQuadrada (Ram *ram, CPU *cpu, int radicando);
+int pitagoras(Ram *ram, CPU *cpu, int cat1, int cat2);
+void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c);
 
 int main (){
     srand (time(NULL));
@@ -26,7 +29,8 @@ int main (){
     //fatorial(ram, cpu, 10);
     //mdc(ram, cpu, 540, 168);
     //numero_primo(ram, cpu, 7);
-
+    //raizQuadrada (ram, cpu, 36);
+    pitagoras (ram, cpu, 45, 72);
 
     return 0;
 }
@@ -169,7 +173,7 @@ void fibonacci (Ram *ram, CPU *cpu, int Nesimo){
     printf ("O %d-esimo termo da sequencia de Fibonacci eh: %d\n", Nesimo, cpu->registrador1);
 }
 
-void exponenciacao (Ram *ram, CPU *cpu, int base, int exponte){
+int exponenciacao (Ram *ram, CPU *cpu, int base, int exponte){
     ram = criarRam_vazia (2);
     cpu = criarCPU ();
     setRegistrador1 (cpu, base);
@@ -206,10 +210,11 @@ void exponenciacao (Ram *ram, CPU *cpu, int base, int exponte){
     iniciarCPU (cpu, ram);
     inst4 = liberarInstrucao (inst4);
     
-    printf ("O resultado da esponenciacao eh: %d\n", cpu->registrador1);
-
+    printf ("O resultado da esponenciacao eh: %d\n", getRegistrador1(cpu));
+    int aux = getRegistrador1(cpu);
     liberarCPU (cpu);
     liberarRam (ram);
+    return aux;
 }
 
 void fatorial(Ram *ram, CPU *cpu, int fatorial){
@@ -316,4 +321,126 @@ void numero_primo(Ram *ram, CPU *cpu, int x){
 
     liberarCPU(cpu);
     liberarRam(ram);
+}
+
+int raizQuadrada (Ram *ram, CPU *cpu, int radicando){
+    ram = criarRam_vazia (4); // [0] = N; [1] = 1; [2] = Radicando; [3] = ResMult
+    cpu = criarCPU ();
+    setRegistrador1 (cpu, radicando);
+    setRegistrador2 (cpu, 1);
+    Instrucao *inst1 = criarInstrucao (4);
+    setInstrucao (inst1, 0, 1, 2, -1, 2); //Reg1 para Ram[2]
+    setInstrucao (inst1, 1, 2, 1, -1, 2); //Reg2 para Ram[1]
+    setInstrucao (inst1, 2, 1, 0, -1, 3); //Ram[0] para Reg1
+    setInstrucao (inst1, 3, -1, -1, -1, -1); //Finalizar inst1
+    setPrograma (cpu, inst1);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst1);
+
+    while (getRegistrador1(cpu) < radicando){
+        Instrucao *inst2 = criarInstrucao (2);
+        setInstrucao (inst2, 0, 1, 0, 0, 0); //Soma Ram[0] com Ram[1]
+        setInstrucao (inst2, 1, -1, -1, -1, -1); //Finalizar inst3
+        setPrograma (cpu, inst2);
+        iniciarCPU (cpu, ram);
+        liberarInstrucao (inst2);
+
+        Instrucao *inst3 = criarInstrucao (3);
+        setInstrucao (inst3, 0, 1, 0, -1, 3); //Ram[0] para Reg1
+        setInstrucao (inst3, 1, 2, 0, -1, 3); //Ram[0] para Reg2
+        setInstrucao (inst3, 2, -1, -1, -1, -1); //Finalizar inst3
+        setPrograma (cpu, inst3);
+        iniciarCPU (cpu, ram);
+        liberarInstrucao (inst3);
+
+        setRegistrador1 (cpu, multiplicacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+
+        Instrucao *inst4 = criarInstrucao (2);
+        setInstrucao (inst4, 0, 1, 3, -1, 2); //Reg1 para Ram[3]
+        setInstrucao (inst4, 1, -1, -1, -1, -1); //Finalizar inst4
+        setPrograma (cpu, inst4);
+        iniciarCPU (cpu, ram);
+        liberarInstrucao (inst4);
+        printf("Registrador1: %d\n", getRegistrador1(cpu));
+    }
+
+    Instrucao *inst5 = criarInstrucao (2);
+    setInstrucao (inst5, 0, 1, 0, -1, 3); //Ram[0] para Reg1
+    setInstrucao (inst5, 1, -1, -1, -1, -1); //Finalizar inst5
+    setPrograma (cpu, inst5);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst5);
+
+    printf ("A raiz do numero eh: %d\n", getRegistrador1(cpu));
+    int aux = getRegistrador1 (cpu);
+    liberarCPU (cpu);
+    liberarRam (ram);
+    return aux;
+}
+
+int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
+    ram = criarRam_vazia (3);
+    cpu = criarCPU ();
+    setRegistrador1 (cpu, cat1);
+    setRegistrador2 (cpu, 2);
+    setRegistrador1 (cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+
+    Instrucao *inst1 = criarInstrucao (2);
+    setInstrucao (inst1, 0, 1, 0, -1, 2);
+    setInstrucao (inst1, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst1);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst1);
+
+    setRegistrador1 (cpu, cat2);
+    setRegistrador2 (cpu, 2);
+    setRegistrador1 (cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+
+    Instrucao *inst2 = criarInstrucao (2);
+    setInstrucao (inst2, 0, 1, 1, -1, 2);
+    setInstrucao (inst2, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst2);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst2);
+
+    Instrucao *inst3 = criarInstrucao (2);
+    setInstrucao (inst3, 0, 0, 1, 0, 0);
+    setInstrucao (inst3, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst3);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst3);
+
+    Instrucao *inst4 = criarInstrucao (2);
+    setInstrucao (inst4, 0, 1, 0, -1, 3);
+    setInstrucao (inst4, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst4);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst4);
+
+    setRegistrador1 (cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+    Instrucao *inst5 = criarInstrucao (2);
+    setInstrucao (inst5, 0, 1, 0, -1, 2);
+    setInstrucao (inst5, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst5);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst5);
+
+    Instrucao *inst6 = criarInstrucao (2);
+    setInstrucao (inst6, 0, 1, 0, -1, 3);
+    setInstrucao (inst6, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst6);
+    iniciarCPU (cpu, ram);
+    liberarInstrucao (inst6);
+
+    printf ("A hipotenusa eh aproximadamente: %d\n", getRegistrador1 (cpu));
+    int aux = getRegistrador1 (cpu);
+    liberarCPU (cpu);
+    liberarRam (ram);
+    return aux;
+}
+
+void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c){
+    ram = criarRam_vazia (10);
+    cpu = criarCPU ();
+    
 }
