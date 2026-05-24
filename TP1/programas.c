@@ -438,9 +438,3 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     liberarRam (ram);
     return aux;
 }
-
-void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c){
-    ram = criarRam_vazia (10);
-    cpu = criarCPU ();
-    
-}
