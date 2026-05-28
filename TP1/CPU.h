@@ -42,11 +42,13 @@ void iniciarCPU (CPU *c, Ram *ram){
         Instrucao inst = c->programa[c->pc];
         c->opcode = inst.opcode;
         switch (c->opcode){
+        //halt
         case -1:
             printf ("O programa terminou!\n");
             printRam (ram);
             return;
             break;
+        //soma
         case 0: 
             c->registrador1 = getDado (ram, inst.add1);
             c->registrador2 = getDado (ram, inst.add2);
@@ -54,6 +56,7 @@ void iniciarCPU (CPU *c, Ram *ram){
             setDado (ram, inst.add3, c->registrador1);
             printf ("SOMA | Ram posicao: %d\t Conteudo: %d\n", inst.add3, c->registrador1);
             break;
+        //subtracao
         case 1:
             c->registrador1 = getDado (ram, inst.add1);
             c->registrador2 = getDado (ram, inst.add2);
@@ -61,6 +64,7 @@ void iniciarCPU (CPU *c, Ram *ram){
             setDado (ram, inst.add3, c->registrador1);
             printf ("SUBTRACAO | Ram posicao: %d\t Conteudo: %d\n", inst.add3, c->registrador1);
             break;
+        //Copia do Reg para a Ram
         case 2:
             if (inst.add1 == 1){
                 setDado (ram, inst.add2, c->registrador1);
@@ -71,6 +75,7 @@ void iniciarCPU (CPU *c, Ram *ram){
                 printf ("Registrador2 -> Ram | Ram posicao: %d\t Conteudo: %d\n", inst.add2, c->registrador2);
             }
             break;
+        //Copia da Ram para o Reg
         case 3:
             if (inst.add1 == 1){
                 c->registrador1 = getDado(ram, inst.add2);

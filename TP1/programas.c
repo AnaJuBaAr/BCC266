@@ -15,6 +15,7 @@ void mdc(Ram *ram, CPU *cpu, int a, int b);
 void numero_primo(Ram *ram, CPU *cpu, int x);
 int raizQuadrada (Ram *ram, CPU *cpu, int radicando);
 int pitagoras(Ram *ram, CPU *cpu, int cat1, int cat2);
+int delta (Ram *ram, CPU *cpu, int a, int b, int c);
 void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c);
 
 int main (){
@@ -29,8 +30,8 @@ int main (){
     //fatorial(ram, cpu, 10);
     //mdc(ram, cpu, 540, 168);
     //numero_primo(ram, cpu, 7);
-    //raizQuadrada (ram, cpu, 36);
-    pitagoras (ram, cpu, 45, 72);
+    //raizQuadrada (ram, cpu, 49);
+    //pitagoras (ram, cpu, 45, 72);
 
     return 0;
 }
@@ -132,7 +133,7 @@ int divisao (Ram *ram, CPU *cpu, int dividendo, int divisor){
 
     printf ("A divisao eh: %d\t Resto da divisao: %d\n ", cpu->registrador1, cpu->registrador2);
 
-    int aux = cpu->registrador2;
+    int aux = getRegistrador1(cpu);
     liberarCPU (cpu);
     liberarRam (ram);
     return aux;
@@ -381,10 +382,13 @@ int raizQuadrada (Ram *ram, CPU *cpu, int radicando){
 int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     ram = criarRam_vazia (3);
     cpu = criarCPU ();
+
+    //calcula cat1²
     setRegistrador1 (cpu, cat1);
     setRegistrador2 (cpu, 2);
     setRegistrador1 (cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
 
+    //guarda cat1² na ram[0]
     Instrucao *inst1 = criarInstrucao (2);
     setInstrucao (inst1, 0, 1, 0, -1, 2);
     setInstrucao (inst1, 1, -1, -1, -1, -1);
@@ -392,10 +396,12 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst1);
 
+    //calcula cat2²
     setRegistrador1 (cpu, cat2);
     setRegistrador2 (cpu, 2);
     setRegistrador1 (cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
 
+    //guarda cat2² na ram[1]
     Instrucao *inst2 = criarInstrucao (2);
     setInstrucao (inst2, 0, 1, 1, -1, 2);
     setInstrucao (inst2, 1, -1, -1, -1, -1);
@@ -403,6 +409,7 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst2);
 
+    //ram[0] = ram[0] + ram[1]
     Instrucao *inst3 = criarInstrucao (2);
     setInstrucao (inst3, 0, 0, 1, 0, 0);
     setInstrucao (inst3, 1, -1, -1, -1, -1);
@@ -410,6 +417,7 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst3);
 
+    //reg1 = ram[0]
     Instrucao *inst4 = criarInstrucao (2);
     setInstrucao (inst4, 0, 1, 0, -1, 3);
     setInstrucao (inst4, 1, -1, -1, -1, -1);
@@ -417,7 +425,9 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst4);
 
+    //calcula raiz(reg1)
     setRegistrador1 (cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+    //guarda reg1 na ram[0]
     Instrucao *inst5 = criarInstrucao (2);
     setInstrucao (inst5, 0, 1, 0, -1, 2);
     setInstrucao (inst5, 1, -1, -1, -1, -1);
@@ -425,6 +435,7 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst5);
 
+    //reg1 = ram[0]
     Instrucao *inst6 = criarInstrucao (2);
     setInstrucao (inst6, 0, 1, 0, -1, 3);
     setInstrucao (inst6, 1, -1, -1, -1, -1);
@@ -437,4 +448,151 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     liberarCPU (cpu);
     liberarRam (ram);
     return aux;
+}
+
+int delta (Ram *ram, CPU *cpu, int a, int b, int c){
+    ram = criarRam_vazia(3);
+    cpu = criarCPU();
+
+    setRegistrador1(cpu, a);
+    setRegistrador2(cpu, c);
+
+    //calcula a*c
+    setRegistrador1(cpu, multiplicacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+    //calcula 4*a*c
+    setRegistrador2(cpu, multiplicacao(ram, cpu, 4, getRegistrador1(cpu)));
+
+    //calcula b²
+    setRegistrador1(cpu, b);
+    setRegistrador1(cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), 2));
+
+    //copia b² para ram[0] e 4*a*c para ram[1]
+    Instrucao *inst1 = criarInstrucao(3);
+    setInstrucao(inst1, 0, 1, 0, -1, 2);
+    setInstrucao(inst1, 1, 2, 1, -1, 2);
+    setInstrucao(inst1, 2, -1, -1, -1, -1);
+    setPrograma(cpu, inst1);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst1);
+
+    //calcula b² - 4*a*c
+    Instrucao *inst2 = criarInstrucao(2);
+    setInstrucao(inst2, 0, 0, 1, -1, 1);
+    setInstrucao(inst2, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst2);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst2);
+
+    Instrucao *inst3 = criarInstrucao(2);
+    setInstrucao(inst3, 0, 1, 0, -1, 3);
+    setInstrucao(inst3, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst3);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst3);
+
+    printf("O valor de delta é: %d\n", getRegistrador1(cpu));
+    int aux = getRegistrador1(cpu);
+    liberarCPU(cpu);
+    liberarRam(ram);
+    return aux;
+}
+
+void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c){
+    //calcula o delta
+    setRegistrador1(cpu, delta(ram, cpu, a, b, c));
+
+    ram = criarRam_vazia(3);
+    cpu = criarCPU();
+    
+    if(getRegistrador1(cpu) < 0){
+        printf("A equação não possui raízes reais.\n");
+        liberarCPU(cpu);
+        liberarRam(ram);
+        return;
+    } else if(getRegistrador1(cpu) == 0){
+        //calcula -b
+        setRegistrador2(cpu, multiplicacao(ram, cpu, -1, b));
+
+        //calcula raiz quadrada de delta
+        setRegistrador1(cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+
+        //copia -b para ram[0] e raiz de delta para ram[1]
+        Instrucao *inst1 = criarInstrucao(3);
+        setInstrucao(inst1, 0, 2, 0, -1, 2);
+        setInstrucao(inst1, 1, 1, 1, -1, 2);
+        setInstrucao(inst1, 2, -1, -1, -1, -1);
+        setPrograma(cpu, inst1);
+        iniciarCPU(cpu, ram);
+        liberarInstrucao(inst1);
+
+        //soma -b com raiz de delta
+        Instrucao *inst2 = criarInstrucao(2);
+        setInstrucao(inst2, 0, 0, 1, 0, 0);
+        setInstrucao(inst2, 1, -1, -1, -1, -1);
+        setPrograma(cpu, inst2);
+        iniciarCPU(cpu, ram);
+        liberarInstrucao(inst2);
+
+        //copia -b+raiz(delta) para reg1
+        Instrucao *inst3 = criarInstrucao(2);
+        setInstrucao(inst3, 0, 1, 0, -1, 3);
+        setInstrucao(inst3, 1, -1, -1, -1, -1);
+        setPrograma(cpu, inst3);
+        iniciarCPU(cpu, ram);
+        liberarInstrucao(inst3);
+
+        //calcula 2a
+        setRegistrador2(cpu, multiplicacao(ram, cpu, 2, a));
+
+        //calcula (-b + raiz(delta)) / 2a
+        setRegistrador1(cpu, divisao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+
+        printf("A raiz da equação é: %d\n", getRegistrador1(cpu));
+
+        liberarCPU(cpu);
+        liberarRam(ram);
+        return;
+    }
+    //calcula -b
+    setRegistrador2(cpu, multiplicacao(ram, cpu, -1, b));
+
+    //calcula raiz quadrada de delta
+    setRegistrador1(cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+
+    Instrucao *inst2 = criarInstrucao(3);
+    //soma -b com raiz(delta) e guarda em ram[0]
+    setInstrucao(inst2, 0, 0, 1, 0, 0);
+    //subtrai -b com raiz(delta) e guarda em ram[1]
+    setInstrucao(inst2, 1, 0, 1, 1, 1);
+    setInstrucao(inst2, 2, -1, -1, -1, -1);
+    setPrograma(cpu, inst2);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst2);
+
+    //copia (-b + raiz(delta)) para reg1
+    Instrucao *inst3 = criarInstrucao(2);
+    setInstrucao(inst3, 0, 1, 0, -1, 3);
+    setInstrucao(inst3, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst3);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst3);
+
+    //copia (-b - raiz(delta)) para reg2
+    Instrucao *inst4 = criarInstrucao(2);
+    setInstrucao(inst4, 0, 2, 1, -1, 3);
+    setInstrucao(inst4, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst4);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst4);
+
+    //calcula (-b + raiz(delta)) / 2a
+    setRegistrador1(cpu, divisao(ram, cpu, getRegistrador1(cpu), multiplicacao(ram, cpu, 2, a)));
+
+    //calcula (-b - raiz(delta)) / 2a
+    setRegistrador2(cpu, divisao(ram, cpu, getRegistrador2(cpu), multiplicacao(ram, cpu, 2, a)));
+
+    printf("As raizes da equação são: %d e %d\n", getRegistrador1(cpu), getRegistrador2(cpu));
+
+    liberarCPU(cpu);
+    liberarRam(ram);
 }
