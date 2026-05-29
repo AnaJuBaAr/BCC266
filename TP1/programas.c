@@ -10,13 +10,13 @@ int multiplicacao (Ram *ram, CPU *cpu, int multiplicador, int multiplicando);
 int divisao (Ram *ram, CPU *cpu, int dividendo, int divisor);
 void fibonacci (Ram *ram, CPU *cpu, int Nesimo);
 int exponenciacao (Ram *ram, CPU *cpu, int base, int exponte);
-int fatorial(Ram *ram, CPU *cpu, int fatorial);
+void fatorial(Ram *ram, CPU *cpu, int fatorial);
 void mdc(Ram *ram, CPU *cpu, int a, int b);
 void numero_primo(Ram *ram, CPU *cpu, int x);
 int raizQuadrada (Ram *ram, CPU *cpu, int radicando);
 int pitagoras(Ram *ram, CPU *cpu, int cat1, int cat2);
+int delta (Ram *ram, CPU *cpu, int a, int b, int c);
 void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c);
-void coeficienteBinomial (Ram *ram, CPU *cpu, int n, int k);
 
 int main (){
     srand (time(NULL));
@@ -30,9 +30,8 @@ int main (){
     //fatorial(ram, cpu, 10);
     //mdc(ram, cpu, 540, 168);
     //numero_primo(ram, cpu, 7);
-    //raizQuadrada (ram, cpu, 36);
+    //raizQuadrada (ram, cpu, 49);
     //pitagoras (ram, cpu, 45, 72);
-    coeficienteBinomial(ram, cpu, 7, 4);
 
     return 0;
 }
@@ -84,9 +83,9 @@ int multiplicacao (Ram *ram, CPU *cpu, int multiplicador, int multiplicando){
     iniciarCPU (cpu, ram);
     inst3 = liberarInstrucao (inst3);
 
-    printf ("O resultado da multiplicacao eh: %d\n", getRegistrador1(cpu));
+    printf ("O resultado da multiplicacao eh: %d\n", cpu->registrador1);
     
-    int aux = getRegistrador1(cpu);
+    int aux = cpu->registrador1;
     cpu = liberarCPU (cpu);
     ram = liberarRam (ram);
     return aux;
@@ -113,7 +112,7 @@ int divisao (Ram *ram, CPU *cpu, int dividendo, int divisor){
     liberarInstrucao (inst2);
 
     setRegistrador1 (cpu, dividendo);
-    while (getRegistrador1(cpu) >= divisor){
+    while (cpu->registrador1 >= divisor){
         Instrucao *inst3 = criarInstrucao (4);
         setInstrucao (inst3, 0, 0, 1, 0, 1); //Subtrai Ram[0] com Ram[1] e armazeno em Ram[0]
         setInstrucao (inst3, 1, 2, 3, 3, 0); //Somo Ram[2] com Ram[3] e armazeno em Ram[3]
@@ -132,7 +131,7 @@ int divisao (Ram *ram, CPU *cpu, int dividendo, int divisor){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst4);
 
-    printf ("A divisao eh: %d\t Resto da divisao: %d\n ", getRegistrador1(cpu), getRegistrador2(cpu));
+    printf ("A divisao eh: %d\t Resto da divisao: %d\n ", cpu->registrador1, cpu->registrador2);
 
     int aux = getRegistrador1(cpu);
     liberarCPU (cpu);
@@ -172,7 +171,7 @@ void fibonacci (Ram *ram, CPU *cpu, int Nesimo){
     setPrograma (cpu, inst3);
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst3);
-    printf ("O %d-esimo termo da sequencia de Fibonacci eh: %d\n", Nesimo, getRegistrador1(cpu));
+    printf ("O %d-esimo termo da sequencia de Fibonacci eh: %d\n", Nesimo, cpu->registrador1);
 }
 
 int exponenciacao (Ram *ram, CPU *cpu, int base, int exponte){
@@ -196,7 +195,7 @@ int exponenciacao (Ram *ram, CPU *cpu, int base, int exponte){
         setPrograma (cpu, inst2);
         iniciarCPU (cpu, ram);
         liberarInstrucao (inst2);
-        setRegistrador1(cpu, multiplicacao (NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
+        cpu->registrador1 = multiplicacao (ram, cpu, cpu->registrador1, cpu->registrador2);
         Instrucao *inst3 = criarInstrucao (2);
         setInstrucao (inst3, 0, 1, 1, -1, 2); //Reg1 para Ram[1]
         setInstrucao (inst3, 1, -1, -1, -1, -1); //Finalizar inst3
@@ -219,7 +218,7 @@ int exponenciacao (Ram *ram, CPU *cpu, int base, int exponte){
     return aux;
 }
 
-int fatorial(Ram *ram, CPU *cpu, int fatorial){
+void fatorial(Ram *ram, CPU *cpu, int fatorial){
     ram = criarRam_vazia(2);
     cpu = criarCPU();
     
@@ -248,7 +247,7 @@ int fatorial(Ram *ram, CPU *cpu, int fatorial){
         iniciarCPU(cpu, ram);
         liberarInstrucao(inst3);
 
-        setRegistrador1(cpu, multiplicacao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
+        cpu->registrador1 = multiplicacao(ram, cpu, cpu->registrador1, cpu->registrador2);
 
         Instrucao *inst4 = criarInstrucao(2);
         setInstrucao(inst4, 0, 1, 0, -1, 2);
@@ -258,11 +257,10 @@ int fatorial(Ram *ram, CPU *cpu, int fatorial){
         liberarInstrucao(inst4);
     }
     
-    printf("O resultado do fatorial de %d eh: %d\n", fatorial, getRegistrador1(cpu));
-    int aux = getRegistrador1(cpu);
+    printf("O resultado do fatorial de %d eh: %d\n", fatorial, cpu->registrador1);
+
     liberarCPU(cpu);
     liberarRam(ram);
-    return aux;
 }
 
 void mdc(Ram *ram, CPU *cpu, int a, int b){
@@ -272,8 +270,8 @@ void mdc(Ram *ram, CPU *cpu, int a, int b){
     setRegistrador1(cpu, a);
     setRegistrador2(cpu, b);
 
-    while(getRegistrador2(cpu) != 0){
-        setRegistrador1(cpu, divisao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
+    while(cpu->registrador2 != 0){
+        setRegistrador1(cpu, divisao(ram, cpu, cpu->registrador1, cpu->registrador2));
         
         Instrucao *inst2 = criarInstrucao(3);
         setInstrucao(inst2, 0, 2, 0, -1, 2);
@@ -292,7 +290,7 @@ void mdc(Ram *ram, CPU *cpu, int a, int b){
         liberarInstrucao(inst3);
     }
 
-    printf("MDC = %d\n", getRegistrador1(cpu));
+    printf("MDC = %d\n", cpu->registrador1);
 }
 
 void numero_primo(Ram *ram, CPU *cpu, int x){
@@ -301,8 +299,8 @@ void numero_primo(Ram *ram, CPU *cpu, int x){
 
     setRegistrador1(cpu, x);
 
-    if(getRegistrador1(cpu) <= 2){
-        printf("O numero %d é primo\n", getRegistrador1(cpu));
+    if(cpu->registrador1 <= 2){
+        printf("O numero %d é primo\n", cpu->registrador1);
         
         liberarCPU(cpu);
         liberarRam(ram);
@@ -310,9 +308,9 @@ void numero_primo(Ram *ram, CPU *cpu, int x){
         return;
     }
 
-    for(int i = 2; i < getRegistrador1(cpu); i++){
-        if(divisao(NULL, NULL, getRegistrador1(cpu), i) == 0){
-            printf("Numero %d não é primo\n", getRegistrador1(cpu));
+    for(int i = 2; i < cpu->registrador1; i++){
+        if(divisao(ram, cpu, cpu->registrador1, i) == 0){
+            printf("Numero %d não é primo\n", cpu->registrador1);
             
             liberarCPU(cpu);
             liberarRam(ram);
@@ -320,7 +318,7 @@ void numero_primo(Ram *ram, CPU *cpu, int x){
             return;
         }
     }
-    printf("O numero %d é primo\n", getRegistrador1(cpu));
+    printf("O numero %d é primo\n", cpu->registrador1);
 
     liberarCPU(cpu);
     liberarRam(ram);
@@ -356,7 +354,7 @@ int raizQuadrada (Ram *ram, CPU *cpu, int radicando){
         iniciarCPU (cpu, ram);
         liberarInstrucao (inst3);
 
-        setRegistrador1 (cpu, multiplicacao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
+        setRegistrador1 (cpu, multiplicacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
 
         Instrucao *inst4 = criarInstrucao (2);
         setInstrucao (inst4, 0, 1, 3, -1, 2); //Reg1 para Ram[3]
@@ -384,10 +382,13 @@ int raizQuadrada (Ram *ram, CPU *cpu, int radicando){
 int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     ram = criarRam_vazia (3);
     cpu = criarCPU ();
+
+    //calcula cat1²
     setRegistrador1 (cpu, cat1);
     setRegistrador2 (cpu, 2);
-    setRegistrador1 (cpu, exponenciacao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
+    setRegistrador1 (cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
 
+    //guarda cat1² na ram[0]
     Instrucao *inst1 = criarInstrucao (2);
     setInstrucao (inst1, 0, 1, 0, -1, 2);
     setInstrucao (inst1, 1, -1, -1, -1, -1);
@@ -395,10 +396,12 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst1);
 
+    //calcula cat2²
     setRegistrador1 (cpu, cat2);
     setRegistrador2 (cpu, 2);
-    setRegistrador1 (cpu, exponenciacao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
+    setRegistrador1 (cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
 
+    //guarda cat2² na ram[1]
     Instrucao *inst2 = criarInstrucao (2);
     setInstrucao (inst2, 0, 1, 1, -1, 2);
     setInstrucao (inst2, 1, -1, -1, -1, -1);
@@ -406,6 +409,7 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst2);
 
+    //ram[0] = ram[0] + ram[1]
     Instrucao *inst3 = criarInstrucao (2);
     setInstrucao (inst3, 0, 0, 1, 0, 0);
     setInstrucao (inst3, 1, -1, -1, -1, -1);
@@ -413,6 +417,7 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst3);
 
+    //reg1 = ram[0]
     Instrucao *inst4 = criarInstrucao (2);
     setInstrucao (inst4, 0, 1, 0, -1, 3);
     setInstrucao (inst4, 1, -1, -1, -1, -1);
@@ -420,7 +425,9 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst4);
 
-    setRegistrador1 (cpu, raizQuadrada(NULL, NULL, getRegistrador1(cpu)));
+    //calcula raiz(reg1)
+    setRegistrador1 (cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+    //guarda reg1 na ram[0]
     Instrucao *inst5 = criarInstrucao (2);
     setInstrucao (inst5, 0, 1, 0, -1, 2);
     setInstrucao (inst5, 1, -1, -1, -1, -1);
@@ -428,6 +435,7 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     iniciarCPU (cpu, ram);
     liberarInstrucao (inst5);
 
+    //reg1 = ram[0]
     Instrucao *inst6 = criarInstrucao (2);
     setInstrucao (inst6, 0, 1, 0, -1, 3);
     setInstrucao (inst6, 1, -1, -1, -1, -1);
@@ -442,13 +450,23 @@ int pitagoras (Ram *ram, CPU *cpu, int cat1, int cat2){
     return aux;
 }
 
-void coeficienteBinomial (Ram *ram, CPU *cpu, int n, int k){
-    ram = criarRam_vazia(5);
+int delta (Ram *ram, CPU *cpu, int a, int b, int c){
+    ram = criarRam_vazia(3);
     cpu = criarCPU();
 
-    //Colocando n e k na ram
-    setRegistrador1(cpu, n);
-    setRegistrador2(cpu, k);
+    setRegistrador1(cpu, a);
+    setRegistrador2(cpu, c);
+
+    //calcula a*c
+    setRegistrador1(cpu, multiplicacao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+    //calcula 4*a*c
+    setRegistrador2(cpu, multiplicacao(ram, cpu, 4, getRegistrador1(cpu)));
+
+    //calcula b²
+    setRegistrador1(cpu, b);
+    setRegistrador1(cpu, exponenciacao(ram, cpu, getRegistrador1(cpu), 2));
+
+    //copia b² para ram[0] e 4*a*c para ram[1]
     Instrucao *inst1 = criarInstrucao(3);
     setInstrucao(inst1, 0, 1, 0, -1, 2);
     setInstrucao(inst1, 1, 2, 1, -1, 2);
@@ -457,87 +475,123 @@ void coeficienteBinomial (Ram *ram, CPU *cpu, int n, int k){
     iniciarCPU(cpu, ram);
     liberarInstrucao(inst1);
 
-    //Fatorial de n! e k!
-    Instrucao *inst2 = criarInstrucao(3);
-    setInstrucao(inst2, 0, 1, 0, -1, 3);
-    setInstrucao(inst2, 1, 2, 1, -1, 3);
-    setInstrucao(inst2, 2, -1, -1, -1, -1);
+    //calcula b² - 4*a*c
+    Instrucao *inst2 = criarInstrucao(2);
+    setInstrucao(inst2, 0, 0, 1, -1, 1);
+    setInstrucao(inst2, 1, -1, -1, -1, -1);
     setPrograma(cpu, inst2);
     iniciarCPU(cpu, ram);
     liberarInstrucao(inst2);
-    setRegistrador1(cpu, fatorial(NULL, NULL, getRegistrador1(cpu)));
-    setRegistrador2(cpu, fatorial(NULL, NULL, getRegistrador2(cpu)));
-    Instrucao *inst3 = criarInstrucao(3);
-    setInstrucao(inst3, 0, 1, 2, -1, 2);
-    setInstrucao(inst3, 1, 2, 3, -1, 2);
-    setInstrucao(inst3, 2, -1, -1, -1, -1);
+
+    Instrucao *inst3 = criarInstrucao(2);
+    setInstrucao(inst3, 0, 1, 0, -1, 3);
+    setInstrucao(inst3, 1, -1, -1, -1, -1);
     setPrograma(cpu, inst3);
     iniciarCPU(cpu, ram);
     liberarInstrucao(inst3);
 
-    //Subtraindo (n-k)
+    printf("O valor de delta é: %d\n", getRegistrador1(cpu));
+    int aux = getRegistrador1(cpu);
+    liberarCPU(cpu);
+    liberarRam(ram);
+    return aux;
+}
+
+void bhaskara (Ram *ram, CPU *cpu, int a, int b, int c){
+    //calcula o delta
+    setRegistrador1(cpu, delta(ram, cpu, a, b, c));
+
+    ram = criarRam_vazia(3);
+    cpu = criarCPU();
+    
+    if(getRegistrador1(cpu) < 0){
+        printf("A equação não possui raízes reais.\n");
+        liberarCPU(cpu);
+        liberarRam(ram);
+        return;
+    } else if(getRegistrador1(cpu) == 0){
+        //calcula -b
+        setRegistrador2(cpu, multiplicacao(ram, cpu, -1, b));
+
+        //calcula raiz quadrada de delta
+        setRegistrador1(cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+
+        //copia -b para ram[0] e raiz de delta para ram[1]
+        Instrucao *inst1 = criarInstrucao(3);
+        setInstrucao(inst1, 0, 2, 0, -1, 2);
+        setInstrucao(inst1, 1, 1, 1, -1, 2);
+        setInstrucao(inst1, 2, -1, -1, -1, -1);
+        setPrograma(cpu, inst1);
+        iniciarCPU(cpu, ram);
+        liberarInstrucao(inst1);
+
+        //soma -b com raiz de delta
+        Instrucao *inst2 = criarInstrucao(2);
+        setInstrucao(inst2, 0, 0, 1, 0, 0);
+        setInstrucao(inst2, 1, -1, -1, -1, -1);
+        setPrograma(cpu, inst2);
+        iniciarCPU(cpu, ram);
+        liberarInstrucao(inst2);
+
+        //copia -b+raiz(delta) para reg1
+        Instrucao *inst3 = criarInstrucao(2);
+        setInstrucao(inst3, 0, 1, 0, -1, 3);
+        setInstrucao(inst3, 1, -1, -1, -1, -1);
+        setPrograma(cpu, inst3);
+        iniciarCPU(cpu, ram);
+        liberarInstrucao(inst3);
+
+        //calcula 2a
+        setRegistrador2(cpu, multiplicacao(ram, cpu, 2, a));
+
+        //calcula (-b + raiz(delta)) / 2a
+        setRegistrador1(cpu, divisao(ram, cpu, getRegistrador1(cpu), getRegistrador2(cpu)));
+
+        printf("A raiz da equação é: %d\n", getRegistrador1(cpu));
+
+        liberarCPU(cpu);
+        liberarRam(ram);
+        return;
+    }
+    //calcula -b
+    setRegistrador2(cpu, multiplicacao(ram, cpu, -1, b));
+
+    //calcula raiz quadrada de delta
+    setRegistrador1(cpu, raizQuadrada(ram, cpu, getRegistrador1(cpu)));
+
+    Instrucao *inst2 = criarInstrucao(3);
+    //soma -b com raiz(delta) e guarda em ram[0]
+    setInstrucao(inst2, 0, 0, 1, 0, 0);
+    //subtrai -b com raiz(delta) e guarda em ram[1]
+    setInstrucao(inst2, 1, 0, 1, 1, 1);
+    setInstrucao(inst2, 2, -1, -1, -1, -1);
+    setPrograma(cpu, inst2);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst2);
+
+    //copia (-b + raiz(delta)) para reg1
+    Instrucao *inst3 = criarInstrucao(2);
+    setInstrucao(inst3, 0, 1, 0, -1, 3);
+    setInstrucao(inst3, 1, -1, -1, -1, -1);
+    setPrograma(cpu, inst3);
+    iniciarCPU(cpu, ram);
+    liberarInstrucao(inst3);
+
+    //copia (-b - raiz(delta)) para reg2
     Instrucao *inst4 = criarInstrucao(2);
-    setInstrucao(inst4, 0, 0, 1, 1, 1);
+    setInstrucao(inst4, 0, 2, 1, -1, 3);
     setInstrucao(inst4, 1, -1, -1, -1, -1);
     setPrograma(cpu, inst4);
     iniciarCPU(cpu, ram);
     liberarInstrucao(inst4);
 
-    //Fatorial de (n-k)!
-    Instrucao *inst5 = criarInstrucao(2);
-    setInstrucao(inst5, 0, 1, 1, -1, 3);
-    setInstrucao(inst5, 1, -1, -1, -1, -1);
-    setPrograma(cpu, inst5);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst5);
-    setRegistrador1(cpu, fatorial(NULL, NULL, getRegistrador1(cpu)));
-    Instrucao *inst6 = criarInstrucao(2);
-    setInstrucao(inst6, 0, 1, 1, -1, 2);
-    setInstrucao(inst6, 2, -1, -1, -1, -1);
-    setPrograma(cpu, inst6);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst6);
+    //calcula (-b + raiz(delta)) / 2a
+    setRegistrador1(cpu, divisao(ram, cpu, getRegistrador1(cpu), multiplicacao(ram, cpu, 2, a)));
 
-    //Multiplicando k! * (n-k)!
-    Instrucao *inst7 = criarInstrucao(3);
-    setInstrucao(inst7, 0, 1, 3, -1, 3);
-    setInstrucao(inst7, 1, 2, 1, -1, 3);
-    setInstrucao(inst7, 2, -1, -1, -1, -1);
-    setPrograma(cpu, inst7);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst7);
-    printf("\n\noi\n\n");
-    setRegistrador1(cpu, multiplicacao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
-    Instrucao *inst8 = criarInstrucao(2);
-    setInstrucao(inst8, 0, 1, 1, -1, 2);
-    setInstrucao(inst8, 2, -1, -1, -1, -1);
-    setPrograma(cpu, inst8);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst8);
+    //calcula (-b - raiz(delta)) / 2a
+    setRegistrador2(cpu, divisao(ram, cpu, getRegistrador2(cpu), multiplicacao(ram, cpu, 2, a)));
 
-    //Dividindo n! / k! * (n-k)!
-    Instrucao *inst9 = criarInstrucao(3);
-    setInstrucao(inst9, 0, 1, 2, -1, 3);
-    setInstrucao(inst9, 1, 2, 1, -1, 3);
-    setInstrucao(inst9, 2, -1, -1, -1, -1);
-    setPrograma(cpu, inst9);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst9);
-    setRegistrador1(cpu, divisao(NULL, NULL, getRegistrador1(cpu), getRegistrador2(cpu)));
-    Instrucao *inst10 = criarInstrucao(2);
-    setInstrucao(inst10, 0, 1, 0, -1, 2);
-    setInstrucao(inst10, 2, -1, -1, -1, -1);
-    setPrograma(cpu, inst10);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst10);
-
-    Instrucao *inst11 = criarInstrucao(2);
-    setInstrucao(inst11, 0, 1, 0, -1, 3);
-    setInstrucao(inst11, 2, -1, -1, -1, -1);
-    setPrograma(cpu, inst11);
-    iniciarCPU(cpu, ram);
-    liberarInstrucao(inst11);
-    printf("O resultado da combinacao eh: %d\n", getRegistrador1(cpu));
+    printf("As raizes da equação são: %d e %d\n", getRegistrador1(cpu), getRegistrador2(cpu));
 
     liberarCPU(cpu);
     liberarRam(ram);
